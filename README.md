@@ -58,7 +58,7 @@ The website is just files. All logic lives in Postgres functions, so there is no
 ## Quick start
 
 ```bash
-git clone https://github.com/<you>/event-checkin && cd event-checkin
+git clone https://github.com/Akshat-Gurnani/event-checkin && cd event-checkin
 ```
 
 1. **Supabase**: create a project → SQL editor → run [`supabase/schema.sql`](supabase/schema.sql), then your edited copy of [`supabase/seed.sql`](supabase/seed.sql).
