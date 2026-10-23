@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walk-in Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  .wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 64px; display: grid; gap: 16px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top h1 { font-size: 26px; }
+  .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .brand .brand-logo { height: 52px; padding-right: 16px; border-right: 1px solid var(--border); }
+
+  section.card { padding: 26px 28px; display: grid; gap: 14px; }
+  section h2 { font-size: 21px; }
+  section .desc { margin: -8px 0 0; color: var(--muted); font-size: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .drop { border: 2px dashed rgb(255 255 255 / .18); border-radius: var(--radius); padding: 22px; text-align: center; color: var(--text-2); cursor: pointer; }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .note { font-size: 14px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); color: var(--text-2); }
+  .note.ok { background: var(--good-soft); color: var(--good-ink); }
+  .note.bad { background: var(--critical-soft); color: var(--critical); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .q { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; background: rgb(255 255 255 / .02); }
+  .q .row > input { flex: 1; min-width: 180px; }
+  .q select { width: auto; }
+  .qr-wrap { display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
+  #qr { background: #fff; padding: 14px; border-radius: var(--radius); border: 1px solid var(--border); }
+  #qr img, #qr canvas { display: block; width: 220px; height: 220px; }
+  code { background: var(--surface-2); padding: 2px 6px; border-radius: 6px; font-size: 13px; word-break: break-all; }
+  .danger-zone { border-color: rgb(255 107 107 / .35); }
+  .rep { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: rgb(255 255 255 / .02); }
+  .rep b { font-size: 15px; } .rep .sub { font-size: 12px; color: var(--muted); }
+  .rep .row { gap: 8px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main class="wrap hidden" id="app">
+  <div class="top">
+    <div class="brand"><img class="brand-logo" src="logo.svg" alt="Event logo"><h1>Event admin</h1></div>
+    <div class="row"><a class="btn small" href="dashboard.html">Live dashboard →</a><a class="btn small" href="index.html" target="_blank">Open guest form</a></div>
+  </div>
+
+  <!-- 1. RSVP upload -->
+  <section class="card">
+    <h2>1 · RSVP guest list</h2>
+    <p class="desc">Upload an Excel or CSV file with columns for <b>Name</b>, <b>Number</b> and <b>Invited by</b>. You can also paste rows copied from Google Sheets / Excel. Numbers are matched on their last 10 digits, so <code>+91 98765 43210</code>, <code>098765-43210</code> and <code>9876543210</code> all match.</p>
+    <div class="drop" id="drop"><b>Drop file here</b> or click to choose (.xlsx, .xls, .csv)<input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></div>
+    <textarea id="paste" placeholder="…or paste rows here (include the header row)"></textarea>
+    <div id="preview"></div>
+    <div class="row">
+      <button class="btn primary" id="imp-merge" disabled>Add / update guests</button>
+      <button class="btn" id="imp-replace" disabled>Replace entire list</button>
+      <span class="muted" id="rsvp-count"></span>
+    </div>
+    <div id="imp-result"></div>
+  </section>
+
+  <!-- 2. Form settings -->
+  <section class="card">
+    <h2>2 · Event &amp; form settings</h2>
+    <div class="grid2">
+      <div><label class="field" for="ev-name">Event name</label><input type="text" id="ev-name"></div>
+      <div><label class="field" for="ev-sub">Welcome line</label><input type="text" id="ev-sub"></div>
+    </div>
+    <div>
+      <label class="field" for="team">Extra team members <span class="muted" style="font-weight:400">(one per line — names from the RSVP “Invited by” column are added automatically)</span></label>
+      <textarea id="team" placeholder="e.g. Sales desk"></textarea>
+    </div>
+    <div>
+      <label class="field" for="builders">Builder tables <span class="muted" style="font-weight:400">(one per line &mdash; shown on the guest form, the live feed and each team member&rsquo;s page)</span></label>
+      <textarea id="builders" placeholder="e.g. OMAXE"></textarea>
+    </div>
+    <div><b style="font-size:14px">Preference questions</b></div>
+    <div id="questions" style="display:grid;gap:12px"></div>
+    <div class="row">
+      <button class="btn small" id="add-q">+ Add question</button>
+      <span style="flex:1"></span>
+      <button class="btn primary" id="save-cfg">Save settings</button>
+    </div>
+    <div id="cfg-result"></div>
+  </section>
+
+  <!-- 3. QR -->
+  <section class="card">
+    <h2>3 · Guest QR code</h2>
+    <p class="desc">Print this and place it at the entrance. For the reception tablet use the kiosk link: it resets for the next guest automatically.</p>
+    <div class="qr-wrap">
+      <div id="qr"></div>
+      <div style="display:grid;gap:10px;min-width:0;flex:1">
+        <div><div class="muted" style="font-size:13px">Guest link</div><code id="guest-url"></code></div>
+        <div><div class="muted" style="font-size:13px">Reception tablet (kiosk) link</div><code id="kiosk-url"></code></div>
+        <div class="row"><button class="btn small" id="dl-qr">Download QR (PNG)</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Team links -->
+  <section class="card">
+    <h2>4 · Team member links</h2>
+    <p class="desc">Each team member gets a <b>personal link</b> that shows only their own guests and gives them a sound + on-screen alert the moment one arrives. Send it on WhatsApp; they open it on their phone and tap “Enable alerts”. Anyone with a link can see that person’s guests, so share each one only with its owner.</p>
+    <div id="rep-links"><div class="note">Upload the RSVP list first — links appear for every name in the “Invited by” column.</div></div>
+    <div class="row"><button class="btn small" id="reload-links" type="button">Refresh list</button></div>
+  </section>
+
+  <!-- 5. Observers -->
+  <section class="card">
+    <h2>5 · Observers (staff who watch the data)</h2>
+    <p class="desc">Add the people who will view and monitor the event. Each gets a <b>personal link</b> that opens the live dashboard and front desk directly, with no PIN, and lets them export CSVs. They can check guests in and link walk-ins, but cannot change settings, the RSVP list or team links, reset data, or delete check-ins. Reset or remove a link at any time. Share each link only with its owner.</p>
+    <form class="row" id="obs-form" autocomplete="off"><input type="text" id="obs-name" placeholder="Name, e.g. Rajesh (Director)" maxlength="60" required style="flex:1;min-width:200px"><button class="btn primary" type="submit">Add observer</button></form>
+    <div id="obs-note"></div>
+    <div id="obs-list"></div>
+  </section>
+
+  <!-- 6. Admin access -->
+  <section class="card">
+    <h2>6 · Admin access</h2>
+    <p class="desc">The admin PIN is stored (hashed) in the database. To change it, call the <code>admin_set_pin</code> function — see docs/SECURITY.md. Anyone with it can view the dashboard and change data — share it only with staff.</p>
+    <div class="row"><button class="btn small" id="logout" type="button">Log out on this device</button></div>
+  </section>
+
+  <!-- 5. Danger -->
+  <section class="card danger-zone">
+    <h2>7 · Reset data</h2>
+    <p class="desc">Use “Clear check-ins” after testing, before the event starts.</p>
+    <div class="row"><button class="btn danger" id="reset-checkins">Clear all check-ins</button><button class="btn danger" id="reset-all">Clear everything (RSVP list + check-ins)</button></div>
+    <div id="reset-result"></div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

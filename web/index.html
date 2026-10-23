@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>Guest Check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 560px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { text-align: center; margin-bottom: 26px; }
+  header .brand-logo { height: 72px; margin: 0 auto 22px; }
+  footer { text-align: center; margin-top: 28px; font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+  footer i { font-family: var(--font-display); color: var(--accent); }
+  header .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  header h1 { font-size: 32px; margin-top: 8px; }
+  header p { margin: 8px 0 0; color: var(--text-2); }
+  form.card { padding: 28px 24px; display: grid; gap: 22px; }
+  .phone { display: flex; }
+  .phone span { display: grid; place-items: center; padding: 0 12px; border: 1px solid var(--border); border-right: 0; border-radius: 16px 0 0 16px; background: var(--surface-2); color: var(--text-2); font-weight: 600; }
+  .phone input { border-radius: 0 16px 16px 0; }
+  .section-title { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; border-top: 1px solid var(--border); padding-top: 20px; margin-bottom: -6px; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span { display: inline-block; padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px; font-size: 14px; font-weight: 700; cursor: pointer; background: rgb(255 255 255 / .04); color: var(--text-2); user-select: none; transition: background .12s, border-color .12s; }
+  .chip span:hover { border-color: rgb(255 255 255 / .25); }
+  .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 18px rgb(240 96 67 / .3); }
+  .chip input:focus-visible + span { box-shadow: 0 0 0 3px var(--accent-soft); }
+  button[type=submit] { width: 100%; justify-content: center; padding: 17px; font-size: 16px; letter-spacing: .02em; }
+  .done { text-align: center; padding: 40px 24px; }
+  .done .icon { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 18px; background: var(--accent-soft); color: var(--accent); }
+  .done h2 { font-size: 30px; }
+  .done p { color: var(--text-2); margin: 10px 0 24px; font-size: 16px; }
+  .loading { text-align: center; padding: 60px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <img class="brand-logo" src="logo.svg" alt="Event logo">
+    <div class="eyebrow">Guest check-in</div>
+    <h1 id="ev-name">&nbsp;</h1>
+    <p id="ev-sub"></p>
+  </header>
+
+  <div id="loading" class="loading">Loading…</div>
+
+  <form id="form" class="card hidden" novalidate>
+    <div>
+      <label class="field" for="name">Full name</label>
+      <input id="name" name="name" type="text" autocomplete="name" required maxlength="100" placeholder="Your name">
+    </div>
+    <div>
+      <label class="field" for="phone">Mobile number</label>
+      <div class="phone"><span>+91</span><input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" required placeholder="10-digit mobile number"></div>
+    </div>
+
+    <div>
+      <label class="field" for="additional">Is anyone coming with you? <span class="hint">(family or friends &mdash; they don&rsquo;t need to check in separately)</span></label>
+      <select id="additional" name="additional"><option value="0">No, just me</option><option value="1">1 more person</option><option value="2">2 more people</option><option value="3">3 more people</option><option value="4">4 more people</option><option value="5">5 more people</option><option value="6">6 more people</option><option value="7">7 more people</option><option value="8">8 more people</option><option value="9">9 more people</option><option value="10">10 more people</option><option value="11">11 more people</option><option value="12">12 more people</option><option value="13">13 more people</option><option value="14">14 more people</option><option value="15">15 more people</option></select>
+    </div>
+
+    <div id="builder-box" class="hidden">
+      <label class="field" for="builder">Which builder&rsquo;s table are you visiting? <span class="hint">(optional)</span></label>
+      <select id="builder" name="builder"><option value="">Select&hellip;</option></select>
+    </div>
+
+    <div class="section-title">Your preferences</div>
+    <div id="questions" style="display:grid;gap:20px"></div>
+
+    <div>
+      <label class="field" for="referred">Who from our team are you in touch with? <span class="hint">(optional)</span></label>
+      <select id="referred" name="referred"></select>
+    </div>
+
+    <label class="check"><input type="checkbox" id="consent"> I agree to be contacted by the team about properties matching my preferences.</label>
+
+    <p id="err" class="error" hidden></p>
+    <button class="btn primary" type="submit" id="submit">Check in</button>
+  </form>
+
+  <section id="done" class="card done hidden" aria-live="polite">
+    <div class="icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h2 id="done-title"></h2>
+    <p id="done-msg"></p>
+    <button class="btn" id="again" type="button">Check in another guest</button>
+  </section>
+
+  <footer>Powered by <a href="https://github.com/">event-checkin</a></footer>
+</main>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="checkin.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+*.xlsx
+*.csv
+*.log
+.DS_Store
+node_modules/
+.vercel/
+supabase/.temp/
+__pycache__/

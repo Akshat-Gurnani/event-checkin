@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Walk-in Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 16px; }
+  .top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .top h1 { font-size: 26px; }
+  .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .brand .brand-logo { height: 52px; padding-right: 16px; border-right: 1px solid var(--border); }
+
+  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 0 rgb(12 163 12 / .5); animation: pulse 2s infinite; }
+  .live.stale i { background: var(--critical); animation: none; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgb(12 163 12 / 0); } 100% { box-shadow: 0 0 0 0 rgb(12 163 12 / 0); } }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .actions select { width: auto; padding: 8px 14px; font-size: 13px; font-weight: 700; border-radius: 999px; }
+
+  .banner { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 20px; border-radius: 1.25rem; background: var(--warn-soft); border: 1px solid rgb(240 96 67 / .4); color: var(--warn-ink); font-weight: 700; }
+
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .kpi { padding: 18px 22px; }
+  .kpi, .progress { border-radius: 1.25rem; }
+  .kpi .label { font-size: 13px; color: var(--text-2); font-weight: 500; }
+  .kpi .value { font-family: var(--font-display); font-size: 44px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: lining-nums tabular-nums; }
+  .kpi .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .kpi.hero { background: linear-gradient(135deg, rgb(29 51 105 / .85), rgb(240 96 67 / .35)); border-color: rgb(255 255 255 / .14); }
+  .kpi.hero .value { color: #fff; }
+  .kpi.hero .label, .kpi.hero .sub { color: rgb(255 255 255 / .8); }
+
+  .progress { padding: 18px 22px; }
+  .progress .bar { height: 14px; border-radius: 7px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+  .progress .bar span { display: block; height: 100%; background: var(--series-invited); border-radius: 7px; transition: width .6s ease; }
+  .progress .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; }
+  .panel { padding: 24px 26px; min-width: 0; }
+  .panel h2 { font-size: 20px; margin-bottom: 4px; }
+  .panel .desc { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rate { display: flex; align-items: center; gap: 10px; min-width: 110px; }
+  .rate .track { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .rate .track span { display: block; height: 100%; background: var(--series-invited); border-radius: 4px; }
+  .rate b { width: 42px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .scroll-x { overflow-x: auto; }
+
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; }
+  #timeline svg { display: block; width: 100%; height: 240px; }
+  #timeline text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+  #timeline .grid line { stroke: var(--border); }
+
+  .prefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 28px; }
+  .pref h3 { font-family: var(--font); font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .hbar { display: grid; grid-template-columns: minmax(90px, 40%) 1fr 34px; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 7px; }
+  .hbar .lbl { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar .track { height: 14px; }
+  .hbar .track span { display: block; height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; background: var(--gold); }
+  .hbar .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .ready-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .ready-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .rep { border: 1px solid var(--border); border-radius: 1rem; padding: 12px 14px; display: grid; gap: 6px; background: rgb(255 255 255 / .02); }
+  .rep .name { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .rep .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .rep.ready .dot { background: var(--good); } .rep.partial .dot { background: var(--gold); } .rep.none .dot { background: var(--critical); }
+  .rep .state { font-size: 12px; color: var(--muted); }
+  .rep .flags { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
+  .rep .flags label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .rep .flags input { accent-color: var(--accent); }
+  .stages { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .tab { border: 0; background: transparent; font: 600 14px var(--font); color: var(--text-2); padding: 8px 12px; border-radius: 999px; cursor: pointer; }
+  .tab[aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
+  .tabs input { margin-left: auto; max-width: 260px; padding: 8px 12px; font-size: 14px; }
+  .tag-diff { display: inline-block; font-size: 12px; color: var(--warn-ink); background: var(--warn-soft); padding: 1px 8px; border-radius: 999px; margin-left: 4px; }
+  .prefs-cell { color: var(--text-2); font-size: 13px; max-width: 320px; }
+  .handled { font-size: 13px; color: var(--good-ink); white-space: nowrap; }
+  .wait { font-size: 13px; color: var(--warn-ink); white-space: nowrap; font-weight: 700; }
+  .empty { padding: 28px; text-align: center; color: var(--muted); }
+  tr.new td { animation: flash 2.5s ease-out; }
+  @keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+  .x { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 6px; }
+  .x:hover { color: var(--critical); background: var(--surface-2); }
+
+  .tip { position: fixed; pointer-events: none; z-index: 40; background: var(--text); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; opacity: 0; transition: opacity .1s; }
+  .toasts { position: fixed; right: 16px; bottom: 16px; display: grid; gap: 8px; z-index: 30; max-width: calc(100vw - 32px); }
+  .toast { background: var(--surface-solid); border: 1px solid var(--border); border-left: 4px solid var(--series-invited); border-radius: 10px; padding: 12px 14px; box-shadow: 0 8px 24px rgb(0 0 0 / .18); font-size: 14px; animation: slide .3s ease-out; }
+  .toast.walkin { border-left-color: var(--series-walkin); }
+  @keyframes slide { from { transform: translateY(12px); opacity: 0; } }
+
+  @media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, 1fr); } .kpi .value { font-size: 30px; } .tabs input { margin-left: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<main class="wrap hidden" id="app">
+  <div class="top">
+    <div class="brand"><img class="brand-logo" src="logo.svg" alt="Event logo"><div>
+      <h1 id="ev-name">Live dashboard</h1>
+      <div class="live" id="live"><i></i><span id="updated">Connecting…</span></div>
+    </div></div>
+    <div class="actions">
+      <select id="day" aria-label="Day"></select>
+      <a class="btn small primary" href="desk.html">Front desk</a>
+      <button class="btn small" id="exp-checkins">Export check-ins</button>
+      <button class="btn small" id="exp-noshows">Export not-arrived</button>
+      <a class="btn small" id="admin-link" href="admin.html">Admin</a>
+      <button class="btn small" id="fs">Fullscreen</button>
+    </div>
+  </div>
+
+  <div class="banner" id="waiting-banner" hidden>
+    <span id="waiting-text"></span>
+    <button class="btn small" id="waiting-show" type="button">Show them</button>
+  </div>
+
+  <section class="kpis">
+    <div class="card kpi"><div class="label">Invited (RSVP)</div><div class="value" id="k-invited">–</div><div class="sub">on the guest list</div></div>
+    <div class="card kpi"><div class="label">Invited &amp; arrived</div><div class="value" id="k-arrived">–</div><div class="sub" id="k-pending">–</div></div>
+    <div class="card kpi hero"><div class="label">Turnout</div><div class="value" id="k-rate">–</div><div class="sub">of invited guests</div></div>
+    <div class="card kpi"><div class="label">Uninvited walk-ins</div><div class="value" id="k-walkins">–</div><div class="sub">not on the RSVP list</div></div>
+    <div class="card kpi"><div class="label">Total footfall</div><div class="value" id="k-total">–</div><div class="sub">people</div></div>
+  </section>
+
+  <section class="card progress">
+    <div class="row"><b style="color:var(--text)">Invited vs. actual</b><span id="p-label"></span></div>
+    <div class="bar"><span id="p-bar" style="width:0"></span></div>
+  </section>
+
+  <section class="card panel">
+    <div class="ready-head"><h2>Team readiness</h2><span class="muted" id="ready-summary" style="font-size:14px"></span></div>
+    <p class="desc">Who is set up to receive alerts, and who takes walk-ins. Walk-ins who name nobody are shared out in turn among members who take walk-ins, are available, and are free.</p>
+    <div class="ready-grid" id="ready"></div>
+  </section>
+
+  <section class="grid2">
+    <div class="card panel">
+      <h2>Team scoreboard</h2>
+      <p class="desc">Turnout of each team member’s invitees, plus walk-ins who named them or were assigned to them.</p>
+      <div class="scroll-x"><table id="team"></table></div>
+    </div>
+    <div class="card panel">
+      <h2>Arrivals over time</h2>
+      <p class="desc">Check-ins per 15 minutes.</p>
+      <div class="legend"><span><i style="background:var(--series-invited)"></i>Invited</span><span><i style="background:var(--series-walkin)"></i>Walk-in</span></div>
+      <div id="timeline"></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card panel">
+      <h2>What guests are looking for</h2>
+      <p class="desc">Number of guests choosing each option (multi-select questions can add up to more than the guest count).</p>
+      <div class="prefs" id="prefs"></div>
+    </div>
+    <div class="card panel">
+      <h2>Lead pipeline</h2>
+      <p class="desc">Stages set by the team after talking to guests (all days).</p>
+      <div class="stages" id="stages"></div>
+    </div>
+  </section>
+
+  <section class="card panel">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="feed" aria-selected="true">Live feed <span id="c-feed"></span></button>
+      <button class="tab" role="tab" data-tab="waiting">Waiting for a rep <span id="c-waiting"></span></button>
+      <button class="tab" role="tab" data-tab="pending">Not arrived yet <span id="c-pending"></span></button>
+      <button class="tab" role="tab" data-tab="walkins">Walk-ins <span id="c-walkins"></span></button>
+      <input type="search" id="q" placeholder="Search name, number, team…">
+    </div>
+    <div class="scroll-x" id="list"></div>
+  </section>
+</main>
+<div class="tip" id="tip"></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

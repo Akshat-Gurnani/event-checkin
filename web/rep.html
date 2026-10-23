@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Guest Alerts">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Guests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* leave room for the iPhone status bar / notch and home indicator when launched from the home screen */
+  .wrap { max-width: 620px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(60px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
+  .head { display: flex; align-items: center; gap: 14px; }
+  .head .brand-logo { height: 44px; padding-right: 14px; border-right: 1px solid var(--border); }
+  .head h1 { font-size: 22px; }
+  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--good); animation: pulse 2s infinite; }
+  .live.stale i { background: var(--critical); animation: none; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgb(12 163 12 / 0); } 0% { box-shadow: 0 0 0 0 rgb(12 163 12 / .5); } }
+
+  .enable { padding: 16px 18px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .enable p { margin: 0; font-size: 14px; color: var(--text-2); flex: 1; min-width: 200px; }
+  .enable.on { border-color: rgb(95 211 95 / .35); }
+  .btn[hidden] { display: none; }
+  .enable .steps { margin: 8px 0 0; padding-left: 20px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .kpi { padding: 14px 16px; border-radius: 1.25rem; }
+  .kpi .label { font-size: 12px; color: var(--text-2); }
+  .kpi .value { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1.15; }
+  .kpi.hero { background: linear-gradient(135deg, rgb(29 51 105 / .85), rgb(240 96 67 / .35)); border-color: rgb(255 255 255 / .14); }
+
+  .alerts { display: grid; gap: 10px; }
+  .alert { border: 1px solid var(--accent); background: linear-gradient(135deg, rgb(240 96 67 / .22), rgb(29 51 105 / .55)); border-radius: 1.25rem; padding: 16px 18px; animation: pop .35s ease-out; }
+  .alert .t { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #ffd9d0; font-weight: 700; }
+  .alert h2 { font-size: 22px; margin: 4px 0 2px; }
+  .alert p { margin: 0 0 12px; color: var(--text-2); font-size: 14px; }
+  .alert .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  @keyframes pop { from { transform: scale(.96); opacity: 0; } }
+
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab { border: 0; background: transparent; font: 700 14px var(--font); color: var(--text-2); padding: 9px 14px; border-radius: 999px; cursor: pointer; }
+  .tab[aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
+
+  .list { display: grid; gap: 10px; }
+  .g { padding: 14px 16px; border-radius: 1.25rem; display: grid; gap: 8px; }
+  .g .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .g b { font-size: 16px; }
+  .g .ph { color: var(--muted); font-size: 13px; }
+  .g .meta { font-size: 13px; color: var(--text-2); }
+  .g .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag { font-size: 12px; color: var(--warn-ink); }
+  .empty { padding: 28px; text-align: center; color: var(--muted); }
+  .bad { text-align: center; padding: 60px 20px; }
+  .bad h1 { font-size: 26px; margin-bottom: 8px; }
+
+  .avail { padding: 14px 18px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .avail p { margin: 0; font-size: 14px; color: var(--text-2); flex: 1; min-width: 180px; }
+  .handled { font-size: 13px; color: var(--good-ink); }
+  .waiting { font-size: 12px; color: var(--warn-ink); }
+  .visits { font-size: 12px; color: var(--muted); }
+  .lead { display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .lead .row { align-items: center; }
+  .note-box { display: grid; gap: 8px; }
+  .note-box textarea { min-height: 70px; font-size: 14px; }
+  .note-preview { font-size: 13px; color: var(--text-2); background: rgb(255 255 255 / .04); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; }
+  .saved { font-size: 12px; color: var(--good-ink); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div id="invalid" class="card bad hidden">
+    <h1>This link isn’t valid</h1>
+    <p class="muted">Please ask the front desk for your personal guest link.</p>
+  </div>
+
+  <div id="app" class="hidden" style="display:contents">
+    <div class="head">
+      <img class="brand-logo" src="logo.svg" alt="Event logo">
+      <div>
+        <h1 id="hello">My guests</h1>
+        <div class="live" id="live"><i></i><span id="updated">Connecting…</span></div>
+      </div>
+    </div>
+
+    <section class="card enable" id="enable">
+      <p id="enable-msg">Checking your phone…</p>
+      <button class="btn primary" id="enable-btn" type="button" hidden>🔔 Enable alerts</button>
+    </section>
+
+    <section class="card avail" id="avail" hidden>
+      <p id="avail-msg"></p>
+      <button class="btn small" id="avail-btn" type="button"></button>
+    </section>
+
+    <div class="alerts" id="alerts"></div>
+
+    <section class="kpis">
+      <div class="card kpi"><div class="label">Invited</div><div class="value" id="k-inv">–</div></div>
+      <div class="card kpi hero"><div class="label">Arrived</div><div class="value" id="k-arr">–</div></div>
+      <div class="card kpi"><div class="label">Yet to arrive</div><div class="value" id="k-pend">–</div></div>
+    </section>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="arrived" aria-selected="true">Arrived <span id="c-arr"></span></button>
+      <button class="tab" role="tab" data-tab="pending" aria-selected="false">Yet to arrive <span id="c-pend"></span></button>
+      <button class="tab" role="tab" data-tab="named" aria-selected="false">Walk-ins &amp; requests <span id="c-named"></span></button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="rep.js"></script>
+</body>
+</html>

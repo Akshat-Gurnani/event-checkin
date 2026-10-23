@@ -1,0 +1,4 @@
+# Used by the Supabase CLI (`supabase functions deploy push-notify`).
+# The function authenticates callers with the shared x-push-secret header instead of a JWT.
+[functions.push-notify]
+verify_jwt = false

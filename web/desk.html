@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 64px; display: grid; gap: 16px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top h1 { font-size: 26px; }
+  .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .brand .brand-logo { height: 52px; padding-right: 16px; border-right: 1px solid var(--border); }
+  section.card { padding: 24px 26px; display: grid; gap: 14px; }
+  section h2 { font-size: 20px; }
+  section .desc { margin: -8px 0 0; color: var(--muted); font-size: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr .8fr auto; gap: 10px; align-items: end; }
+  .results { display: grid; gap: 8px; }
+  .note { font-size: 14px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); color: var(--text-2); }
+  .note.ok { background: var(--good-soft); color: var(--good-ink); }
+  .note.bad { background: var(--critical-soft); color: var(--critical); }
+  .wait { color: var(--warn-ink); font-weight: 700; }
+  @media (max-width: 760px) { .grid3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main class="wrap hidden" id="app">
+  <div class="top">
+    <div class="brand"><img class="brand-logo" src="logo.svg" alt="Event logo"><h1>Front desk</h1></div>
+    <div class="row"><a class="btn small" href="dashboard.html">← Live dashboard</a></div>
+  </div>
+
+  <section class="card">
+    <h2>Check in an invited guest</h2>
+    <p class="desc">For guests who can’t scan the QR. Search the guest list by name, number or the team member who invited them.</p>
+    <input type="search" id="q" placeholder="Search name, number or inviter…" autocomplete="off">
+    <div class="results" id="results"></div>
+    <div id="result-note"></div>
+  </section>
+
+  <section class="card">
+    <h2>Add a walk-in</h2>
+    <p class="desc">For a guest who isn’t on the list. If the number turns out to be on the guest list, they’re checked in as that guest. Leave “Who are they with?” empty to hand them to the next free team member.</p>
+    <form id="walkin-form" class="grid3" autocomplete="off">
+      <div><label class="field" for="w-name">Name</label><input id="w-name" type="text" required maxlength="100"></div>
+      <div><label class="field" for="w-phone">Mobile number</label><input id="w-phone" type="tel" inputmode="numeric" required></div>
+      <div><label class="field" for="w-rep">Who are they with?</label><select id="w-rep"><option value="">Next free team member</option></select></div>
+      <div><label class="field" for="w-add">Others with them</label><select id="w-add"><option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option></select></div>
+      <button class="btn primary" type="submit">Add walk-in</button>
+    </form>
+    <div id="walkin-note"></div>
+  </section>
+
+  <section class="card">
+    <h2>Walk-ins today</h2>
+    <p class="desc">Did a guest use a different number than the one on the list? Press <b>Link to guest</b>, pick them from the guest list, and they’re counted as that guest: the inviter gets the credit and an alert, and the new number is remembered.</p>
+    <div id="walkins"></div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="desk.js"></script>
+</body>
+</html>
